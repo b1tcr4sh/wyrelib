@@ -5,18 +5,18 @@ using Serilog;
 
 namespace wyrelib.PhysicalLayer;
 
-public class OscConnection : IConnection {
+public class OscConnection {
     private OscAvatarConfig _config;
     private Clock _clock;
     private ILogger _logger;
 
-    public OscConnection(OscAvatarConfig config, ILogger logger) {
+    internal OscConnection(OscAvatarConfig config, ILogger logger) {
         _config = config;
         _logger = logger;
         _clock = new Clock(config);
     }
 
-    public async Task<Result> WriteAsync(Byte data) {
+    internal async Task<Result> WriteAsync(Byte data) {
         BitArray buffer = new BitArray(data);
 
         try {
@@ -34,7 +34,7 @@ public class OscConnection : IConnection {
 
         return Result.Success();
     } 
-    public async Task<Result<byte>> ReadAsync() {
+    internal async Task<Result<byte>> ReadAsync() {
         BitArray buffer = new BitArray(8);
 
         for (int i = 0; i < 8; i++) {
