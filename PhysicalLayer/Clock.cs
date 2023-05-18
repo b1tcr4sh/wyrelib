@@ -2,11 +2,11 @@ using Ardalis.Result;
 using BuildSoft.VRChat.Osc;
 using BuildSoft.VRChat.Osc.Avatar;
 
-namespace wyrelib.physicalLayer;
+namespace wyrelib.PhysicalLayer;
 
 public class Clock {
     // TODO 
-    // Perform checks to make sure writes to conflict
+    // Perform checks to make sure writes don't conflict
     // e.g. Check if listening or not before pulsing/reading 
     private OscAvatarConfig _config;
 

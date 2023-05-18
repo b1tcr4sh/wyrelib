@@ -3,33 +3,20 @@ using BuildSoft.VRChat.Osc.Avatar;
 using Ardalis.Result;
 using Serilog;
 
-namespace wyrelib.physicalLayer;
+namespace wyrelib.PhysicalLayer;
 
 public class OscConnection : IConnection {
     private OscAvatarConfig _config;
     private Clock _clock;
     private ILogger _logger;
 
-    public OscConnection(ILoggingProvider provider) {
-        _logger = provider.GetLogger();
+    public OscConnection(OscAvatarConfig config, ILogger logger) {
+        _config = config;
+        _logger = logger;
+        _clock = new Clock(config);
     }
 
-    public async Task<Result> ConnectToVrchat() {
-        Result res = await GetValidAvatar();
-        if (res.Status == ResultStatus.Error) {
-            // throw new OscConnectionException("Couldn't connect to VRChat");
-            _logger.Warning("Failed to get the current avatar, Do \"Reset Avatar\" or start VRChat.");
-            return Result.Error();
-        } else if (res.Status == ResultStatus.NotFound) {
-            _logger.Debug("Current avatar is missing params!");
-            return Result.NotFound();
-        }
-
-        _clock = new Clock(_config);
-
-        return Result.Success();
-    }
-    public async Task<Result> WriteAsync(byte data) {
+    public async Task<Result> WriteAsync(Byte data) {
         BitArray buffer = new BitArray(data);
 
         try {
@@ -58,27 +45,6 @@ public class OscConnection : IConnection {
         return ConvertToByte(buffer);
     }
 
-
-    private async Task<Result> GetValidAvatar() {
-        _logger.Debug("Waiting for avatar...");
-        _config = await OscAvatarConfig.WaitAndCreateAtCurrentAsync();
-
-        if (_config is null) {
-            return Result.Error("Failed to get avatar");
-        }
-
-        bool valid = true;
-        valid = _config.Parameters.ContainsKey("wyre/read");
-        valid = _config.Parameters.ContainsKey("wyre/write");
-        valid = _config.Parameters.ContainsKey("wyre/listening");
-        valid = _config.Parameters.ContainsKey("wyre/clock");
-
-        if (!valid) {
-            return Result.NotFound();
-        }
-
-        return Result.Success();
-    }
     private byte ConvertToByte(BitArray bits) {
         if (bits.Count != 8)
         {
