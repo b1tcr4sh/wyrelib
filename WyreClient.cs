@@ -23,19 +23,17 @@ public class WyreClient {
         OscAvatarUtility.AvatarChanged += OnAviChanged;
     }
 
-    public async Task<Result> ConnectAsync() {
+    public async Task ConnectAsync() {
         Result<OscAvatarConfig> res = await GetValidAvatarAsync();
         if (res.Status == ResultStatus.Error) {
-            // throw new OscConnectionException("Couldn't connect to VRChat");
             _logger.Warning("Failed to get the current avatar, Do \"Reset Avatar\" or start VRChat.");
-            return Result.Error();
+            return;
         } else if (res.Status == ResultStatus.NotFound) {
-            _logger.Debug("Current avatar is missing params!");
-            return Result.NotFound();
+            _logger.Warning("Current avatar is missing required params!");
+            return;
         }
 
         _connection = new OscConnection(res.Value, _logger);
-        return Result.Success();
     }
 
     private async Task<Result<OscAvatarConfig>> GetValidAvatarAsync() {   
