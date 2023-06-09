@@ -49,7 +49,6 @@ public class WyreClient {
         valid = config.Parameters.ContainsKey("wyre/read0");
         valid = config.Parameters.ContainsKey("wyre/write");
         valid = config.Parameters.ContainsKey("wyre/listening");
-        valid = config.Parameters.ContainsKey("wyre/clock");
 
         if (!valid) {
             return Result.NotFound();
