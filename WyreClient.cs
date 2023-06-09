@@ -15,7 +15,7 @@ public class WyreClient {
     // - Implement data channels as streams
     // - Encryption maybe?
 
-    private OscConnection _connection;
+    private AviConnection _connection;
     private ILogger _logger;
 
     public WyreClient(ILoggingProvider provider) {
@@ -33,7 +33,7 @@ public class WyreClient {
             return;
         }
 
-        _connection = new OscConnection(res.Value, _logger);
+        _connection = new AviConnection(res.Value, _logger);
     }
 
     private async Task<Result<OscAvatarConfig>> GetValidAvatarAsync() {   
@@ -45,7 +45,8 @@ public class WyreClient {
         }
 
         bool valid = true;
-        valid = config.Parameters.ContainsKey("wyre/read");
+        valid = config.Parameters.ContainsKey("wyre/read1");
+        valid = config.Parameters.ContainsKey("wyre/read0");
         valid = config.Parameters.ContainsKey("wyre/write");
         valid = config.Parameters.ContainsKey("wyre/listening");
         valid = config.Parameters.ContainsKey("wyre/clock");

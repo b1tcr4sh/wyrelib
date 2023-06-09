@@ -5,27 +5,29 @@ using Serilog;
 
 namespace wyrelib.PhysicalLayer;
 
-public class OscConnection {
+public class AviConnection {
     private OscAvatarConfig _config;
-    private Clock _clock;
     private ILogger _logger;
 
-    internal OscConnection(OscAvatarConfig config, ILogger logger) {
+    internal AviConnection(OscAvatarConfig config, ILogger logger) {
         _config = config;
         _logger = logger;
-        _clock = new Clock(config);
     }
 
-    internal async Task<Result> WriteAsync(Byte data) {
+    internal Result WriteAsync(Byte data) {
         BitArray buffer = new BitArray(data);
 
         try {
             foreach (bool bit in buffer) {
-                _config.Parameters["wyre/write"] = bit;
-                Result res = await _clock.PulseAsync(100);
+                WriteBit(bit);
+                Result<bool> result = ReadBit();
 
-                if (!res.IsSuccess) {
-                    return Result.Error(string.Join(" | ", res.Errors));
+                if (!result.IsSuccess) {
+                    return Result.NotFound();
+                }
+
+                if (bit != result.Value) {
+                    return Result.Error();
                 }
             }
         } catch (Exception e) {
@@ -33,16 +35,48 @@ public class OscConnection {
         }
 
         return Result.Success();
-    } 
-    internal async Task<Result<byte>> ReadAsync() {
+    }
+    internal Result<byte> ReadAsync() {
         BitArray buffer = new BitArray(8);
 
         for (int i = 0; i < 8; i++) {
-            await _clock.WaitForPulseAsync();
-            buffer[i] = (bool) _config.Parameters["wyre/read"];
+            Result<bool> result = ReadBit();
+
+            if (!result.IsSuccess) {
+                return Result<byte>.Error();
+            }
+
+            buffer[i] = result.Value;
+            WriteBit(buffer[i]);
         }
 
         return ConvertToByte(buffer);
+    }
+    private void WriteBit(bool bit) {
+        _config.Parameters["wyre/write"] = bit;
+    }
+    private Result<bool> ReadBit(int counter = 0) {
+        bool one = (bool) _config.Parameters["wyre/read1"];
+        bool zero = (bool) _config.Parameters["wyre/read0"];
+
+        if (one == false && zero == false) {
+            if (counter > 2) {
+                return Result<bool>.NotFound();
+            }
+
+            ReadBit(1);
+        }
+        if (one == true && zero == false) {
+            return Result<bool>.Error();
+        }
+
+        if (zero == true) {
+            return false;
+        } else if (one == true) {
+            return true;
+        } else {
+            return Result<bool>.Error();
+        }
     }
 
     private byte ConvertToByte(BitArray bits) {
